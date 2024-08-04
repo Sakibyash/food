@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Image Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .left-side, .right-side {
+            background-color: #fff;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-side {
+            background-color: #ff69b4; /* Pink */
+            color: #000; /* Black */
+        }
+
+        .right-side {
+            background-color: #000; /* Black */
+            color: #fff; /* White */
+            max-width: 300px;
+        }
+
+        #result, #dish-details {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-side">
+            <h1>Food Image Classifier</h1>
+            <input type="file" id="imageUpload" accept="image/*">
+            <button id="predictButton">Predict</button>
+            <div id="result"></div>
+        </div>
+        <div class="right-side" id="dish-details"></div>
+    </div>
+
+    <script>
+        async function predict() {
+            const fileInput = document.getElementById('imageUpload');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please upload an image.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('img', file);
+
+            try {
+                // Replace with your Hugging Face Space URL
+                const response = await fetch('https://huggingface.co/spaces/Sakibrumu/Food_Image_Classification/api/predict/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': `Bearer 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`, // Your Hugging Face API token
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                const result = await response.json();
+                
+                // Display the prediction result
+                document.getElementById('result').innerText = `Prediction: ${result.label}`;
+
+                // Fetch dish details
+                const detailsResponse = await fetch(`http://127.0.0.1:5000/dish_details/${result.label}`);
+                const details = await detailsResponse.json();
+                displayDishDetails(details);
+            } catch (error) {
+                console.error('Error making prediction:', error);
+                document.getElementById('result').innerText = 'Error making prediction';
+            }
+        }
+
+        function displayDishDetails(details) {
+            const detailsDiv = document.getElementById('dish-details');
+            detailsDiv.innerHTML = `
+                <h2>Dish Details</h2>
+                <p><strong>Name:</strong> ${details.name}</p>
+                <p><strong>Main Ingredients:</strong> ${details.ingredients.join(', ')}</p>
+                <p><strong>Description:</strong> ${details.description}</p>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const predictButton = document.getElementById('predictButton');
+
+            predictButton.addEventListener('click', predict);
+        });
+    </script>
+</body>
+</html>
