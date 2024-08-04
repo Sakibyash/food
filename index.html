@@ -3,97 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Image Classifier</title>
+    <title>Top Recognizer</title>
     <style>
         body {
+            background-color: black;
+            color: pink;
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            gap: 20px;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            border: 2px solid pink;
             padding: 20px;
+            border-radius: 10px;
+            background-color: #222;
         }
 
         .left-side {
-            background-color: #ff69b4; /* Pink */
-            color: #000; /* Black */
-            border: 2px solid #000;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-right: 20px;
         }
 
-        .right-side {
-            background-color: #000; /* Black */
-            color: #fff; /* White */
-            max-width: 300px;
-            border: 2px solid #000;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        button {
+            background-color: pink;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #ff99cc;
         }
 
         #result {
             margin-top: 20px;
+        }
+
+        .right-side {
+            border-left: 2px solid pink;
+            padding-left: 20px;
+            width: 300px;
+            overflow-y: auto;
+            max-height: 300px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="left-side">
-            <h1>Food Image Classifier</h1>
-            <input type="file" id="imageUpload" accept="image/*">
-            <button id="predictButton">Predict</button>
-            <div id="result"></div>
+            <h1>Top Recognizer</h1>
+            <input id="photo" type="file" accept="image/*">
+            <button onclick="uploadImage()">Upload</button>
         </div>
-        <div class="right-side" id="dish-details">
-            <!-- Dish details will be displayed here -->
+        <div class="right-side">
+            <div id="results"></div>
         </div>
     </div>
 
     <script>
-        async function predict() {
-            const fileInput = document.getElementById('imageUpload');
-            const file = fileInput.files[0];
-            if (!file) {
-                alert('Please upload an image.');
-                return;
-            }
+        async function loaded(reader) {
+            const response = await fetch("https://sakibrumu-food-image-classification.hf.space/run/predict", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ data: [reader.result] })
+            });
 
-            const formData = new FormData();
-            formData.append('img', file);
-
-            try {
-                // Replace with your Hugging Face Space URL
-                const response = await fetch('https://huggingface.co/spaces/Sakibrumu/Food_Image_Classification/api/predict/', {
-                    method: 'POST',
-                    body: formData,
-                    // Remove Content-Type header for FormData
-                });
-
-                const result = await response.json();
-                
-                // Display the prediction result
-                document.getElementById('result').innerText = `Prediction: ${result.label}`;
-
-            } catch (error) {
-                console.error('Error making prediction:', error);
-                document.getElementById('result').innerText = 'Error making prediction';
-            }
+            const json = await response.json();
+            const label = json['data'][0]['label'];
+            document.getElementById("results").innerHTML = `
+                <img src="${reader.result}" width="100%">
+                <p>${label}</p>
+            `;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const predictButton = document.getElementById('predictButton');
-            predictButton.addEventListener('click', predict);
-        });
+        function read() {
+            const reader = new FileReader();
+            reader.addEventListener('load', () => loaded(reader));
+            const file = document.getElementById('photo').files[0];
+            reader.readAsDataURL(file);
+        }
+
+        function uploadImage() {
+            read();
+        }
+
+        document.getElementById('photo').addEventListener('input', read);
     </script>
 </body>
 </html>
