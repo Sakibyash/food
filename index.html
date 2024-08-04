@@ -22,26 +22,26 @@
             padding: 20px;
         }
 
-        .left-side, .right-side {
-            background-color: #fff;
+        .left-side {
+            background-color: #ff69b4; /* Pink */
+            color: #000; /* Black */
             border: 2px solid #000;
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .left-side {
-            background-color: #ff69b4; /* Pink */
-            color: #000; /* Black */
-        }
-
         .right-side {
             background-color: #000; /* Black */
             color: #fff; /* White */
             max-width: 300px;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        #result, #dish-details {
+        #result {
             margin-top: 20px;
         }
     </style>
@@ -54,7 +54,9 @@
             <button id="predictButton">Predict</button>
             <div id="result"></div>
         </div>
-        <div class="right-side" id="dish-details"></div>
+        <div class="right-side" id="dish-details">
+            <!-- Dish details will be displayed here -->
+        </div>
     </div>
 
     <script>
@@ -85,29 +87,14 @@
                 // Display the prediction result
                 document.getElementById('result').innerText = `Prediction: ${result.label}`;
 
-                // Fetch dish details
-                const detailsResponse = await fetch(`http://127.0.0.1:5000/dish_details/${result.label}`);
-                const details = await detailsResponse.json();
-                displayDishDetails(details);
             } catch (error) {
                 console.error('Error making prediction:', error);
                 document.getElementById('result').innerText = 'Error making prediction';
             }
         }
 
-        function displayDishDetails(details) {
-            const detailsDiv = document.getElementById('dish-details');
-            detailsDiv.innerHTML = `
-                <h2>Dish Details</h2>
-                <p><strong>Name:</strong> ${details.name}</p>
-                <p><strong>Main Ingredients:</strong> ${details.ingredients.join(', ')}</p>
-                <p><strong>Description:</strong> ${details.description}</p>
-            `;
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             const predictButton = document.getElementById('predictButton');
-
             predictButton.addEventListener('click', predict);
         });
     </script>
